@@ -1,0 +1,8 @@
+# Runtime dependencies: none. The core engine is built directly on the
+# Python 3.11+ asyncio standard library (no LangChain/CrewAI/AutoGen).
+
+# Development / test dependencies (also available via the `dev` extra in
+# pyproject.toml: `pip install -e .[dev]`).
+pytest>=8.0
+pytest-asyncio>=0.23
+hypothesis>=6.100

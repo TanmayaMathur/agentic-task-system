@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentic-task-system"
+version = "0.1.0"
+description = "Async, framework-free agentic AI system that decomposes and executes multi-step tasks via specialized agents."
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Agentic Task System" }]
+keywords = ["asyncio", "agents", "llm", "orchestration", "batching"]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "hypothesis>=6.100",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = ["src"]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]

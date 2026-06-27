@@ -31,3 +31,7 @@ Thumbs.db
 # Secrets
 .env
 *.local
+
+# Kiro internal spec tooling (kept locally, not published)
+.kiro/specs/**/.config.kiro
+.kiro/specs/**/tasks.md

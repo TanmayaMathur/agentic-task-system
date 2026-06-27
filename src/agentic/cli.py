@@ -184,16 +184,25 @@ def _format_event(event: StreamEvent) -> str:
     return f"  -- {kind.value.upper()}: {event.payload}"
 
 
-async def _consume(stream: StreamBus) -> None:
+async def _consume(stream: StreamBus, delay: float = 0.0) -> None:
     """Print every event from the bus until it is closed (the consumer task).
 
     Runs concurrently with execution so partial outputs are shown as they are
     produced rather than after the whole run completes (Requirement 5.1). The
     generator returns cleanly once :meth:`StreamBus.close` enqueues its
     sentinel.
+
+    Args:
+        stream: The bus to drain.
+        delay: Optional seconds to pause after printing each event. Purely a
+            presentation aid (e.g. for a screen-recorded demo) so the streamed
+            events are visibly paced; it does not affect execution, which runs
+            concurrently regardless.
     """
     async for event in stream.subscribe():
-        print(_format_event(event))
+        print(_format_event(event), flush=True)
+        if delay > 0:
+            await asyncio.sleep(delay)
 
 
 def _print_header(task_text: str, *, fail: bool, failure_type: str) -> None:
@@ -233,6 +242,7 @@ async def run_demo(
     *,
     fail: bool = False,
     failure_type: str = "transient",
+    delay: float = 0.0,
 ) -> Task:
     """Run one end-to-end demo and return the final, terminal :class:`Task`.
 
@@ -245,6 +255,8 @@ async def run_demo(
         fail: When True, reproduce the failure path (analyzer fails).
         failure_type: ``"transient"`` or ``"permanent"`` (only used with
             ``fail=True``).
+        delay: Optional seconds to pause between streamed events (presentation
+            aid only; does not affect the actual execution).
 
     Returns:
         The final :class:`Task` with every step in a terminal status.
@@ -255,7 +267,7 @@ async def run_demo(
         fail=fail, failure_type=failure_type
     )
 
-    consumer = asyncio.create_task(_consume(stream))
+    consumer = asyncio.create_task(_consume(stream, delay=delay))
     try:
         task = await orchestrator.run(task_text)
     finally:
@@ -307,17 +319,40 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "'permanent' fails immediately without retry."
         ),
     )
+    parser.add_argument(
+        "--slow",
+        dest="slow",
+        action="store_true",
+        help=(
+            "Pace the streamed events with a short pause between each so the "
+            "streaming is visible (useful for demos/screen recordings). "
+            "Equivalent to --delay 0.8."
+        ),
+    )
+    parser.add_argument(
+        "--delay",
+        dest="delay",
+        type=float,
+        default=0.0,
+        help=(
+            "Seconds to pause between streamed events (presentation aid only; "
+            "does not affect execution). Overrides --slow when both are given."
+        ),
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     """Console entry point: parse args, run the demo, return an exit code."""
     args = _parse_args(argv)
+    # --delay takes precedence; --slow is a convenient preset.
+    delay = args.delay if args.delay > 0 else (0.8 if args.slow else 0.0)
     asyncio.run(
         run_demo(
             args.task_text,
             fail=args.fail,
             failure_type=args.failure_type,
+            delay=delay,
         )
     )
     return 0

@@ -7,8 +7,8 @@ calls with **explicit, hand-written batching logic**, and degrades gracefully wh
 provider fails.
 
 The engine is built from first principles on Python `asyncio`. It deliberately avoids
-black-box agent frameworks (LangChain, CrewAI, AutoGen) so the control flow — the
-manual batching loop and the retry / circuit-breaker / fallback logic — is fully
+black-box agent frameworks (LangChain, CrewAI, AutoGen) so the control flow - the
+manual batching loop and the retry / circuit-breaker / fallback logic - is fully
 visible and testable. All LLM access sits behind a small provider interface, and a
 deterministic `MockProvider` lets the whole system run and be verified **without an
 API key**.
@@ -92,7 +92,15 @@ python -m agentic.cli --fail --failure-type permanent
 
 # Run your own request
 python -m agentic.cli "Summarize the CAP theorem and write three takeaways."
+
+# Pace the streamed events with a visible pause (useful for demos / screen recordings)
+python -m agentic.cli --fail --slow      # ~0.8s between events
+python -m agentic.cli --fail --delay 1.5 # custom pause in seconds
 ```
+
+> Note: the demo uses a deterministic `MockProvider`, so it returns the same
+> canned text regardless of the request wording — it exercises the *pipeline*,
+> not a real model. Plug in `OpenAIProvider` for real answers.
 
 If running from a checkout without installing, put `src` on the path:
 
